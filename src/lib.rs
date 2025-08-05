@@ -37,6 +37,7 @@ extern "C" {
         opt_old_finalizer: *const c_void,
         opt_old_client_data: *const c_void,
     ) -> *mut c_void;
+    fn GC_get_heap_size() -> size_t;
 }
 
 pub struct Allocator;
@@ -121,6 +122,14 @@ impl Allocator {
         client_data: *const c_void,
     ) {
         GC_register_finalizer(ptr, finalizer, client_data, null(), null());
+    }
+
+    /// Gets the current heap size.
+    /// 
+    /// It ignores the memory space returned to OS (i.e. count only the space
+    /// owned by the garbage collector).
+    pub fn heap_size() -> usize {
+        unsafe { GC_get_heap_size() }
     }
 }
 
