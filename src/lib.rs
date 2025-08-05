@@ -71,10 +71,17 @@ impl Allocator {
     pub unsafe fn register_current_thread() -> Result<(), error::Error> {
         let mut base = GcStackBase { mem_base: null() };
 
-        if GC_get_stack_base(&mut base) != GC_SUCCESS {
-            return Err(error::Error::new("failed to get stack base"));
-        } else if GC_register_my_thread(&base) != GC_SUCCESS {
-            return Err(error::Error::new("failed to register a thread for GC"));
+        let gsb_result = GC_get_stack_base(&mut base);
+        if gsb_result != GC_SUCCESS {
+            return Err(error::Error::new("failed to get stack base", gsb_result));
+        }
+
+        let reg_result = GC_register_my_thread(&base);
+        if reg_result != GC_SUCCESS {
+            return Err(error::Error::new(
+                "failed to register a thread for GC",
+                reg_result,
+            ));
         }
 
         Ok(())
@@ -125,7 +132,7 @@ impl Allocator {
     }
 
     /// Gets the current heap size.
-    /// 
+    ///
     /// It ignores the memory space returned to OS (i.e. count only the space
     /// owned by the garbage collector).
     pub fn heap_size() -> usize {
